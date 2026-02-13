@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Question</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      background: linear-gradient(135deg, #ff7eb3, #ff758c);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .container {
+      text-align: center;
+      color: #fff;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Hearts layer behind content */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .heart {
+      position: absolute;
+      bottom: -40px;
+      font-size: 18px;
+      opacity: 0.55;
+      animation: floatUp linear infinite;
+      filter: blur(0.1px);
+    }
+
+    @keyframes floatUp {
+      from { transform: translateY(0) scale(1); }
+      to { transform: translateY(-110vh) scale(1.15); }
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      margin: 0 0 20px;
+      line-height: 1.15;
+    }
+
+    #yesBtn {
+      font-size: clamp(1.1rem, 4vw, 1.8rem);
+      padding: 16px 38px;
+      border: none;
+      border-radius: 12px;
+      background: #28c76f;
+      color: white;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* tiny evil no button */
+    #noBtn {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      font-size: 10px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      border: none;
+      background: #ff4d4f;
+      color: white;
+      cursor: pointer;
+      z-index: 9999;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .puppy {
+      width: min(260px, 70vw);
+      height: auto;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+      animation: puppyBounce 2.6s infinite ease-in-out;
+      margin: 0 auto 22px;
+      display: block;
+    }
+
+    @keyframes puppyBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <div class="container">
+    <h1>Zelli0n, will you sell me your knife for 200 Eur?</h1>
+    <img class="puppy" src="puppy.png" alt="Cute puppy" onerror="this.style.display='none'" />
+    <button id="yesBtn" type="button">YES</button>
+  </div>
+
+  <button id="noBtn" type="button">no</button>
+
+  <script>
+    // Create subtle floating hearts behind everything
+    const heartsWrap = document.getElementById('hearts');
+    const heartCount = 16;
+    for (let i = 0; i < heartCount; i++) {
+      const s = document.createElement('div');
+      s.className = 'heart';
+      s.textContent = '❤';
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.animationDuration = (6 + Math.random() * 6) + 's';
+      s.style.animationDelay = (-Math.random() * 12) + 's';
+      s.style.fontSize = (12 + Math.random() * 14) + 'px';
+      s.style.opacity = (0.25 + Math.random() * 0.25).toFixed(2);
+      heartsWrap.appendChild(s);
+    }
+
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    yesBtn.addEventListener('click', () => {
+      alert('Good choice 😌❤️');
+    });
+
+    // --- High-speed bouncing "No" ---
+    let x = Math.random() * (window.innerWidth - 40);
+    let y = Math.random() * (window.innerHeight - 30);
+
+    let vx = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 10);
+    let vy = (Math.random() > 0.5 ? 1 : -1) * (10 + Math.random() * 10);
+
+    function step() {
+      const bw = noBtn.offsetWidth;
+      const bh = noBtn.offsetHeight;
+      const maxX = window.innerWidth - bw;
+      const maxY = window.innerHeight - bh;
+
+      x += vx;
+      y += vy;
+
+      if (x <= 0) { x = 0; vx *= -1; }
+      if (x >= maxX) { x = maxX; vx *= -1; }
+      if (y <= 0) { y = 0; vy *= -1; }
+      if (y >= maxY) { y = maxY; vy *= -1; }
+
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+
+      requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+
+    function escapeNow(px, py) {
+      const bw = noBtn.offsetWidth;
+      const bh = noBtn.offsetHeight;
+      const maxX = Math.max(0, window.innerWidth - bw);
+      const maxY = Math.max(0, window.innerHeight - bh);
+
+      const candidates = [
+        { x: 10, y: 10 },
+        { x: maxX - 10, y: 10 },
+        { x: 10, y: maxY - 10 },
+        { x: maxX - 10, y: maxY - 10 },
+        { x: Math.random() * maxX, y: Math.random() * maxY }
+      ];
+
+      let best = candidates[0];
+      let bestD = -1;
+      for (const c of candidates) {
+        const dx = (c.x + bw / 2) - px;
+        const dy = (c.y + bh / 2) - py;
+        const d = Math.hypot(dx, dy);
+        if (d > bestD) { bestD = d; best = c; }
+      }
+
+      x = Math.max(0, Math.min(best.x, maxX));
+      y = Math.max(0, Math.min(best.y, maxY));
+
+      vx = (Math.random() > 0.5 ? 1 : -1) * (12 + Math.random() * 12);
+      vy = (Math.random() > 0.5 ? 1 : -1) * (12 + Math.random() * 12);
+    }
+
+    noBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      escapeNow(e.clientX, e.clientY);
+    }, { passive: false });
+
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    });
+
+    window.addEventListener('resize', () => {
+      const bw = noBtn.offsetWidth;
+      const bh = noBtn.offsetHeight;
+      x = Math.min(x, Math.max(0, window.innerWidth - bw));
+      y = Math.min(y, Math.max(0, window.innerHeight - bh));
+    });
+  </script>
+</body>
+</html>
